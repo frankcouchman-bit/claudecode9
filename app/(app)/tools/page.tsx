@@ -299,7 +299,7 @@ export default function ToolsPage() {
             className="mt-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
           >
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              Sign in to access all writing tools. Free plan includes 1 tool use per day.
+              Sign in to access all writing tools. Free plan includes 1 tool use per week.
             </p>
           </motion.div>
         )}
@@ -335,13 +335,18 @@ export default function ToolsPage() {
       </div>
 
       <Tabs defaultValue="headline" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
+        {/* Tab bar: include all tools available via the backend */}
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-10 overflow-x-auto">
           <TabsTrigger value="headline">Headlines</TabsTrigger>
           <TabsTrigger value="meta">Meta Tags</TabsTrigger>
           <TabsTrigger value="links">Internal Links</TabsTrigger>
           <TabsTrigger value="readability">Readability</TabsTrigger>
           <TabsTrigger value="brief">Brief</TabsTrigger>
           <TabsTrigger value="keywords">Keywords</TabsTrigger>
+          <TabsTrigger value="headline-analysis">Headline Analysis</TabsTrigger>
+          <TabsTrigger value="serp">SERP Preview</TabsTrigger>
+          <TabsTrigger value="plagiarism">Plagiarism</TabsTrigger>
+          <TabsTrigger value="competitor">Competitor</TabsTrigger>
         </TabsList>
 
         {/* Headline Generator */}

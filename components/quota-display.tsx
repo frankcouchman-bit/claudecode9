@@ -250,7 +250,7 @@ export function QuotaBadge({ isAuthenticated }: { isAuthenticated: boolean }) {
 
   const isPro = quota.plan === 'pro'
   const remaining = isPro
-    ? 15 - quota.todayGenerations
+    ? 10 - quota.todayGenerations
     : 1 - quota.weekGenerations
 
   return (

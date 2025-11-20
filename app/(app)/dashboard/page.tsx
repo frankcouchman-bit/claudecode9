@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import Demo from '@/components/sections/demo'
 import {
   FileText,
   TrendingUp,
@@ -183,6 +184,15 @@ export default function Page(){
 
   return (
     <div className="container py-10 space-y-8">
+      {/* Article Generator for authenticated users */}
+      {profile && (
+        <div className="mb-10">
+          <h2 className="text-3xl font-bold mb-4">New Article</h2>
+          <p className="text-muted-foreground mb-6">Generate a new long‑form article directly from your dashboard.</p>
+          {/* Demo component handles topic input, word count selection and quota enforcement */}
+          <Demo />
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -302,16 +312,16 @@ export default function Page(){
             <div className="text-2xl font-bold">
               {todayGens}
               {!isPro && <span className="text-sm text-muted-foreground ml-2">/ 1 daily</span>}
-              {isPro && <span className="text-sm text-muted-foreground ml-2">/ 15 daily</span>}
+              {isPro && <span className="text-sm text-muted-foreground ml-2">/ 10 daily</span>}
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-1.5 mt-2">
               <div
                 className="bg-gradient-to-r from-purple-600 to-blue-600 h-1.5 rounded-full transition-all"
-                style={{ width: `${isPro ? Math.min((todayGens / 15) * 100, 100) : Math.min((todayGens / 1) * 100, 100)}%` }}
+                style={{ width: `${isPro ? Math.min((todayGens / 10) * 100, 100) : Math.min((todayGens / 1) * 100, 100)}%` }}
               />
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              {isPro ? `${15 - todayGens} articles left today` : `Resets daily • 7 per month limit`}
+              {isPro ? `${10 - todayGens} articles left today` : 'Resets weekly on Monday'}
             </p>
           </CardContent>
         </Card>
