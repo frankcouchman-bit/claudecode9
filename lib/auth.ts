@@ -24,4 +24,41 @@ export function isAuthed() {
   }
   return false
 }
-export function captureTokensFromURL(){ if(typeof window==='undefined')return; const u=new URL(window.location.href); const at=u.searchParams.get('access_token'); const rt=u.searchParams.get('refresh_token'); const type=u.searchParams.get('type')||undefined; if(at){ setTokens(at, rt||'', type); u.searchParams.delete('access_token'); u.searchParams.delete('refresh_token'); u.searchParams.delete('type'); history.replaceState(null,'',u.toString()) } }
+export function captureTokensFromURL() {
+  if (typeof window === 'undefined') return
+  const u = new URL(window.location.href)
+  // Try to extract tokens from query params first
+  let access = u.searchParams.get('access_token')
+  let refresh = u.searchParams.get('refresh_token')
+  let type = u.searchParams.get('type') || undefined
+  // If no access token found in search params, look in the hash fragment
+  if (!access && typeof window !== 'undefined' && window.location.hash) {
+    // Remove the leading '#'
+    const hash = window.location.hash.substring(1)
+    const hashParams = new URLSearchParams(hash)
+    access = hashParams.get('access_token') || null
+    refresh = hashParams.get('refresh_token') || null
+    type = hashParams.get('type') || type
+    if (access) {
+      // Persist tokens
+      setTokens(access, refresh || '', type)
+      // Remove the token params from the hash
+      hashParams.delete('access_token')
+      hashParams.delete('refresh_token')
+      hashParams.delete('type')
+      // Build the new hash string
+      const newHash = hashParams.toString()
+      const base = u.origin + u.pathname + u.search
+      history.replaceState(null, '', newHash ? `${base}#${newHash}` : base)
+      return
+    }
+  }
+  if (access) {
+    setTokens(access, refresh || '', type)
+    // Clean up query params
+    u.searchParams.delete('access_token')
+    u.searchParams.delete('refresh_token')
+    u.searchParams.delete('type')
+    history.replaceState(null, '', u.toString())
+  }
+}

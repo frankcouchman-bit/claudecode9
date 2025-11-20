@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useQuota } from "@/contexts/quota-context"
 import { useRouter, useParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { getArticle, deleteArticle, generateDraft, updateArticle } from "@/lib/api"
@@ -10,7 +11,6 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useQuota } from '@/contexts/quota-context'
 import {
   ArrowLeft,
   Edit,
@@ -31,6 +31,7 @@ export default function ArticleViewPage() {
   const params = useParams()
   const id = params.id as string
 
+  const { quota, isAuthenticated } = useQuota()
   const [article, setArticle] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
@@ -39,30 +40,23 @@ export default function ArticleViewPage() {
   // Default to 3000 which the backend is known to support.  Smaller
   // selections will be attempted first but a fallback to 3000 is used on
   // failures (see handleRegenerate).
-  // Access quota to determine available expansion sizes
-  const { quota, isAuthenticated } = useQuota()
-  // Determine allowed target word options based on user plan
-  const wordOptions = (() => {
-    if (!isAuthenticated) return ["1500"]
-    if (quota.plan === 'free') return ["1500", "2000"]
-    return ["1500", "2000", "2500", "3000"]
-  })()
-  const [targetWordCount, setTargetWordCount] = useState(() => {
-    return wordOptions[wordOptions.length - 1]
-  })
+  // Determine allowed word count options based on plan.  Guests can expand up to 1.5k words,
+  // free users up to 2k words, and pro users up to 3.5k words.  Provide intermediate
+  // increments for pro users.  Default to the highest allowed option for the plan.
+  const plan = isAuthenticated ? quota.plan : 'guest'
+  const wordOptions =
+    plan === 'pro'
+      ? ['1500', '2000', '2500', '3000']
+      : plan === 'free'
+      ? ['1500', '2000']
+      : ['1500']
+  const [targetWordCount, setTargetWordCount] = useState(wordOptions[wordOptions.length - 1])
 
   useEffect(() => {
     if (id) {
       loadArticle()
     }
   }, [id])
-
-  // Ensure selected target word count remains within allowed options when plan/quota changes
-  useEffect(() => {
-    if (!wordOptions.includes(targetWordCount)) {
-      setTargetWordCount(wordOptions[wordOptions.length - 1])
-    }
-  }, [wordOptions])
 
   async function loadArticle() {
     try {
@@ -314,7 +308,8 @@ export default function ArticleViewPage() {
                         <SelectContent>
                           {wordOptions.map((opt) => (
                             <SelectItem key={opt} value={opt}>
-                              {parseInt(opt).toLocaleString()} words{opt === '2500' ? ' (recommended)' : ''}
+                              {parseInt(opt).toLocaleString()} words
+                              {opt === '2500' && plan === 'pro' ? ' (recommended)' : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AnimatedProgress, AnimatedBadge } from "@/components/animated-counter"
 import { getQuota, getRemainingQuota, type QuotaLimits } from "@/lib/quota-enforcement"
-import { Zap, Crown, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Zap, Crown, TrendingUp, AlertCircle, CheckCircle2, X } from "lucide-react"
 import Link from "next/link"
 
 interface QuotaDisplayProps {
@@ -19,6 +19,11 @@ export function QuotaDisplay({ isAuthenticated, onUpgrade }: QuotaDisplayProps) 
   const [quota, setQuota] = useState<QuotaLimits | null>(null)
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
 
+  // Track whether the guest info banner has been dismissed.  Persist in
+  // localStorage so that dismissing it survives page reloads.  Default
+  // to showing the banner.
+  const [showGuestInfo, setShowGuestInfo] = useState(true)
+
   useEffect(() => {
     const currentQuota = getQuota()
     setQuota(currentQuota)
@@ -27,12 +32,21 @@ export function QuotaDisplay({ isAuthenticated, onUpgrade }: QuotaDisplayProps) 
     if (isAuthenticated && currentQuota.plan === 'free' && currentQuota.weekGenerations >= 1) {
       setShowUpgradePrompt(true)
     }
+
+    // Load guest info dismissal state from local storage.  If the user
+    // previously dismissed the guest banner, do not show it again.
+    if (typeof window !== 'undefined') {
+      const dismissed = localStorage.getItem('hideGuestInfo')
+      if (dismissed === 'true') {
+        setShowGuestInfo(false)
+      }
+    }
   }, [isAuthenticated])
 
   if (!quota) return null
 
   const isPro = quota.plan === 'pro'
-  // Pro users can create up to 10 articles per day; free users get 1 per week
+  // Pro users get up to 10 articles/day, free users 1 per week (tracked via weekGenerations)
   const articlesMax = isPro ? 10 : 1
   const articlesUsed = isPro ? quota.todayGenerations : quota.weekGenerations
   const articlesRemaining = articlesMax - articlesUsed
@@ -92,13 +106,10 @@ export function QuotaDisplay({ isAuthenticated, onUpgrade }: QuotaDisplayProps) 
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Tool Usage</span>
-                  <span className="text-xs text-muted-foreground">
-                    {(() => {
-                      const maxTools = isPro ? 5 : 1
-                      const usedTools = isPro ? quota.toolsToday : (quota.weekTools || 0)
-                      const remaining = maxTools - usedTools
-                      return `${remaining} left`
-                    })()}
+                <span className="text-xs text-muted-foreground">
+                    {isPro
+                      ? `${5 - quota.toolsToday} left`
+                      : `${1 - (quota.weekTools || 0)} left`}
                   </span>
                 </div>
                 <AnimatedProgress
@@ -106,9 +117,6 @@ export function QuotaDisplay({ isAuthenticated, onUpgrade }: QuotaDisplayProps) 
                   max={isPro ? 5 : 1}
                   showLabel={false}
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {isPro ? 'Resets daily at midnight' : 'Resets weekly on Monday'}
-                </p>
               </div>
             )}
 
@@ -146,12 +154,26 @@ export function QuotaDisplay({ isAuthenticated, onUpgrade }: QuotaDisplayProps) 
             )}
 
             {/* Guest User Info */}
-            {!isAuthenticated && (
+            {/* Guest User Info (dismissable) */}
+            {!isAuthenticated && showGuestInfo && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="pt-2 border-t"
+                className="relative pt-2 border-t"
               >
+                {/* Dismiss button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGuestInfo(false)
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('hideGuestInfo', 'true')
+                    }
+                  }}
+                  className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  <X className="w-3 h-3 text-muted-foreground" />
+                </button>
                 <div className="flex items-start gap-2 mb-2">
                   <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5" />
                   <p className="text-xs text-muted-foreground">

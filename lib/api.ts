@@ -166,6 +166,61 @@ export async function analyzeReadability(payload: { content: string }) {
   return handle(res)
 }
 
+// Analyze a headline using the AI headline analyzer.  Returns an object
+// with score, length, word count, and feedback.  See Cloudflare worker
+// endpoint `/api/tools/headline-analyzer` for details.
+export async function analyzeHeadlineApi(payload: { headline: string }) {
+  const res = await fetch(
+    `${API_BASE}/api/tools/headline-analyzer`,
+    withAuthHeaders({
+      method: "POST",
+      body: JSON.stringify({ headline: payload.headline }),
+      cache: "no-store",
+    })
+  )
+  return handle(res)
+}
+
+// Generate a SERP preview snippet given a title, description and URL.
+// Returns an object with Google, Twitter, Facebook and LinkedIn previews.
+export async function serpPreview(payload: { title: string; description: string; url: string }) {
+  const res = await fetch(
+    `${API_BASE}/api/tools/serp-preview`,
+    withAuthHeaders({
+      method: "POST",
+      body: JSON.stringify({ title: payload.title, description: payload.description, url: payload.url }),
+      cache: "no-store",
+    })
+  )
+  return handle(res)
+}
+
+// Check plagiarism for a block of text.  Returns originality score and metrics.
+export async function checkPlagiarism(payload: { content: string }) {
+  const res = await fetch(
+    `${API_BASE}/api/tools/plagiarism`,
+    withAuthHeaders({
+      method: "POST",
+      body: JSON.stringify({ text: payload.content }),
+      cache: "no-store",
+    })
+  )
+  return handle(res)
+}
+
+// Run competitor analysis for a keyword.  Returns difficulty, top content insights and recommendations.
+export async function competitorAnalysis(payload: { keyword: string }) {
+  const res = await fetch(
+    `${API_BASE}/api/tools/competitor-analysis`,
+    withAuthHeaders({
+      method: "POST",
+      body: JSON.stringify({ keyword: payload.keyword }),
+      cache: "no-store",
+    })
+  )
+  return handle(res)
+}
+
 // Generate a content brief for a given topic.  The backend expects a
 // `keyword` parameter rather than `topic`.  Provide the keyword and
 // return the backend response as-is.

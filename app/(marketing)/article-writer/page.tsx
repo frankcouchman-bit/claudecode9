@@ -109,7 +109,8 @@ export default function Page() {
     },
     {
       question: "How many articles can I generate per month?",
-      answer: "Free plan includes 1 article per week with AI-generated hero images and 1 SEO tool use per week. Pro plan offers 10 articles per day and 5 tool uses per day, letting you scale your content production without limits."
+      answer:
+        "Free plan includes 1 article per week with AI-generated hero images and 1 SEO tool per week. Pro plan offers 10 articles per day and 5 tool uses per day, giving you the freedom to scale your content production without limits."
     },
     {
       question: "Does it include keyword research?",

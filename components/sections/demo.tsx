@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -36,30 +35,28 @@ export default function Demo() {
   const [topic, setTopic] = useState("")
   const [language, setLanguage] = useState("en")
   const [tone, setTone] = useState("professional")
-  const [brief, setBrief] = useState("")
-  // Word count options depend on the user's plan.  Guests can only select
-  // 1500 words.  Free users can choose up to 2000.  Pro users can choose
-  // between 1500 and 3000 (with 2500 recommended).  The default word count
-  // will update automatically when the quota changes.
+  // Word count selection.  Options are determined by plan: demo/guest users can
+  // choose only 1500 words; free plan users up to 2000; pro users up to 3000.
   const [wordCount, setWordCount] = useState("3000")
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Compute allowed word count options based on plan
-  const wordOptions = (() => {
-    if (!isAuthenticated) return ["1500"]
-    if (quota.plan === 'free') return ["1500", "2000"]
-    // Pro
-    return ["1500", "2000", "2500", "3000"]
-  })()
+  // Determine allowed word count options based on quota and plan
+  const isProPlan = isAuthenticated && quota.plan === 'pro'
+  const wordOptions = isAuthenticated
+    ? isProPlan
+      ? ["1500", "2000", "2500", "3000"]
+      : ["1500", "2000"]
+    : ["1500"]
 
-  // Update selected word count when quota changes to ensure it remains within allowed options
+  // Ensure selected word count remains within allowed options when quota changes
   useEffect(() => {
     if (!wordOptions.includes(wordCount)) {
       setWordCount(wordOptions[wordOptions.length - 1])
     }
-  }, [wordOptions])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quota, isAuthenticated])
 
   async function run() {
     if (!topic.trim()) {
@@ -89,13 +86,6 @@ export default function Demo() {
       generate_social: true,
       generate_image: true,
       generate_faqs: true
-    } as any
-
-    // Include brief if provided.  This allows users to specify brand context,
-    // instructions or promotional copy that the AI can incorporate into the
-    // article.  The backend will ignore unknown fields gracefully.
-    if (brief.trim()) {
-      basePayload.brief = brief.trim()
     }
 
     // Helper to handle successful generation: updates quota, saves article
@@ -116,24 +106,27 @@ export default function Demo() {
       // Automatically save articles to the library for signed in users
       if (isAuthenticated) {
         try {
-          await saveArticle({
-            title: r.title,
-            content: r.html || r.markdown,
-            markdown: r.markdown,
-            html: r.html,
-            meta_title: r.meta_title,
-            meta_description: r.meta_description,
-            meta_keywords: r.meta_keywords || r.keywords,
-            seo_score: r.seo_score,
-            readability_score: r.readability_score,
-            word_count: r.word_count,
-            image_url: r.image_url,
-            citations: r.citations,
-            faqs: r.faqs,
-            social_posts: r.social_posts,
-            keywords: r.keywords,
-            internal_links: r.internal_links
-          })
+      await saveArticle({
+        // Persist all relevant fields to the backend.  Use a fallback for the
+        // hero image because the Cloudflare worker may return the image
+        // nested under an `image` object instead of directly on the root.
+        title: r.title,
+        content: r.html || r.markdown,
+        markdown: r.markdown,
+        html: r.html,
+        meta_title: r.meta_title,
+        meta_description: r.meta_description,
+        meta_keywords: r.meta_keywords || r.keywords,
+        seo_score: r.seo_score,
+        readability_score: r.readability_score,
+        word_count: r.word_count,
+        image_url: r.image_url || (r.image && (r.image.image_url || r.image.image_b64)) || undefined,
+        citations: r.citations,
+        faqs: r.faqs,
+        social_posts: r.social_posts,
+        keywords: r.keywords,
+        internal_links: r.internal_links,
+      })
         } catch (saveErr) {
           console.error('Auto-save failed:', saveErr)
         }
@@ -244,9 +237,9 @@ export default function Demo() {
                   <SelectValue placeholder="Word Count" />
                 </SelectTrigger>
                 <SelectContent>
-                  {wordOptions.map((opt) => (
-                    <SelectItem key={opt} value={opt}>
-                      {parseInt(opt).toLocaleString()} words{opt === '2500' ? ' (recommended)' : ''}
+                  {wordOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {Number(option).toLocaleString()} words{option === '2500' && isProPlan ? ' (recommended)' : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -270,19 +263,6 @@ export default function Demo() {
                 )}
               </Button>
             </div>
-
-          {/* Optional Brief / Additional Instructions */}
-          <div>
-            <label className="text-sm font-semibold mb-2 block">Brief / Additional Context (Optional)</label>
-            <Textarea
-              placeholder="E.g., highlight our new product line, focus on sustainability, or mention specific case studies"
-              value={brief}
-              onChange={e => setBrief(e.target.value)}
-              className="min-h-[80px]"
-              disabled={loading}
-            />
-            <p className="text-xs text-muted-foreground mt-1">Provide any brand context, promotion or instructions you want the AI to incorporate.</p>
-          </div>
           </div>
 
           <AnimatePresence>

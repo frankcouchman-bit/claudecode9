@@ -65,6 +65,8 @@ export function ArticlePreview({ result, onSave }: ArticlePreviewProps) {
     setSaving(true)
     try {
       const response = await saveArticle({
+        // Save all available fields.  Fallback to nested image fields when
+        // available because the API may return the hero image under `image`.
         title: result.title,
         content: result.html || result.markdown,
         markdown: result.markdown,
@@ -75,12 +77,12 @@ export function ArticlePreview({ result, onSave }: ArticlePreviewProps) {
         seo_score: result.seo_score,
         readability_score: result.readability_score,
         word_count: result.word_count,
-        image_url: result.image_url,
+        image_url: result.image_url || (result.image && (result.image.image_url || result.image.image_b64)) || undefined,
         citations: result.citations,
         faqs: result.faqs,
         social_posts: result.social_posts,
         keywords: result.keywords,
-        internal_links: result.internal_links
+        internal_links: result.internal_links,
       })
 
       setSaved(true)

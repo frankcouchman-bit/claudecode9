@@ -37,11 +37,17 @@ export default function Page(){
   const [err,setErr]=useState<string|null>(null)
   const [upgradeSuccess, setUpgradeSuccess] = useState(false)
 
-  useEffect(()=>{
+  useEffect(() => {
+    // Capture tokens in case the user has just returned from an auth
+    // callback.  This stores any access token in localStorage.
     captureTokensFromURL()
-    const a=isAuthed()
+    const a = isAuthed()
     setAuthed(a)
-    if(!a){ setLoading(false) }
+    // If the token is invalid, clear it so the user can sign in again.
+    if (!a) {
+      clearTokens()
+      setLoading(false)
+    }
 
     // Check for upgrade success
     if (typeof window !== 'undefined') {
