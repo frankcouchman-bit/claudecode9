@@ -1,0 +1,48 @@
+{
+  "name": "seoscribe-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint || true"
+  },
+  "dependencies": {
+    "@radix-ui/react-avatar": "*",
+    "@radix-ui/react-dialog": "*",
+    "@radix-ui/react-dropdown-menu": "*",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slot": "*",
+    "@radix-ui/react-tabs": "*",
+    "@supabase/supabase-js": "*",
+    "@types/js-cookie": "^3.0.6",
+    "class-variance-authority": "*",
+    "clsx": "*",
+    "framer-motion": "*",
+    "isomorphic-dompurify": "*",
+    "js-cookie": "^3.0.5",
+    "lucide-react": "*",
+    "next": "*",
+    "next-seo": "*",
+    "react": "*",
+    "react-dom": "*",
+    "tailwind-merge": "*",
+    "tailwindcss-animate": "*",
+    "zod": "*"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "autoprefixer": "^10.4.21",
+    "eslint": "*",
+    "eslint-config-next": "*",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
+    "typescript": "*"
+  }
+}
