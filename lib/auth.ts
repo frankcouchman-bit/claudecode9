@@ -24,41 +24,53 @@ export function isAuthed() {
   }
   return false
 }
-export function captureTokensFromURL() {
-  if (typeof window === 'undefined') return
+/**
+ * Inspect the current URL for authentication tokens.  Tokens may arrive
+ * either in the query string (e.g., ?access_token=xxx) or in the URL
+ * fragment/hash (e.g., #access_token=xxx).  When tokens are found,
+ * they are persisted to localStorage via `setTokens()` and removed from
+ * the URL so that refreshing the page does not expose them.  A boolean
+ * is returned to indicate whether any tokens were captured; callers may
+ * use this to trigger a redirect or refresh to ensure authentication
+ * state is reflected across the app.
+ */
+export function captureTokensFromURL(): boolean {
+  if (typeof window === 'undefined') return false
   const u = new URL(window.location.href)
-  // Try to extract tokens from query params first
-  let access = u.searchParams.get('access_token')
-  let refresh = u.searchParams.get('refresh_token')
-  let type = u.searchParams.get('type') || undefined
-  // If no access token found in search params, look in the hash fragment
-  if (!access && typeof window !== 'undefined' && window.location.hash) {
-    // Remove the leading '#'
+  let access: string | null = u.searchParams.get('access_token')
+  let refresh: string | null = u.searchParams.get('refresh_token')
+  let type: string | undefined = u.searchParams.get('type') || undefined
+  let tokensCaptured = false
+
+  // If no access token found in query params, check the hash fragment.
+  if (!access && window.location.hash) {
     const hash = window.location.hash.substring(1)
     const hashParams = new URLSearchParams(hash)
     access = hashParams.get('access_token') || null
     refresh = hashParams.get('refresh_token') || null
     type = hashParams.get('type') || type
     if (access) {
-      // Persist tokens
+      // Persist tokens and mark captured
       setTokens(access, refresh || '', type)
-      // Remove the token params from the hash
+      tokensCaptured = true
+      // Remove the token params from the hash to avoid leaking tokens
       hashParams.delete('access_token')
       hashParams.delete('refresh_token')
       hashParams.delete('type')
-      // Build the new hash string
       const newHash = hashParams.toString()
       const base = u.origin + u.pathname + u.search
       history.replaceState(null, '', newHash ? `${base}#${newHash}` : base)
-      return
+      return tokensCaptured
     }
   }
   if (access) {
     setTokens(access, refresh || '', type)
+    tokensCaptured = true
     // Clean up query params
     u.searchParams.delete('access_token')
     u.searchParams.delete('refresh_token')
     u.searchParams.delete('type')
     history.replaceState(null, '', u.toString())
   }
+  return tokensCaptured
 }

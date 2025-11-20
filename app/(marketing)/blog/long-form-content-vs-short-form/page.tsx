@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <article className="container py-12 prose prose-lg max-w-3xl mx-auto prose-headings:font-bold">
+    <article className="container py-12 prose prose-lg max-w-3xl mx-auto prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-headings:gradient-text">
       <h1>Long‑Form vs Short‑Form Content: Why 3k+ Words Win</h1>
       {/* Hero image for this article */}
       <img

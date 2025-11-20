@@ -6,10 +6,14 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Menu, X, Sparkles } from "lucide-react"
+import { clearTokens, isAuthed } from "@/lib/auth"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const router = useRouter()
 
   // Determine if the user is authenticated using the QuotaProvider.  If
   // not wrapped in a QuotaProvider (e.g. during static build), default to
@@ -18,9 +22,12 @@ export function Header() {
   let isAuthenticated = false
   try {
     const { isAuthenticated: authFlag } = useQuota()
-    isAuthenticated = authFlag
+    // Fallback to checking token directly via isAuthed() in case the
+    // QuotaProvider has not updated yet.  This ensures the header
+    // reflects signed-in state immediately after login.
+    isAuthenticated = authFlag || isAuthed()
   } catch {
-    isAuthenticated = false
+    isAuthenticated = isAuthed()
   }
 
   // Base navigation items that are always visible
@@ -65,16 +72,36 @@ export function Header() {
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
-          <Link href="/article-writer">
-            <Button variant="outline" className="hover:border-primary">
-              Try Demo
-            </Button>
-          </Link>
-          <Link href="/auth">
-            <Button className="gradient-btn text-white">
-              Sign In
-            </Button>
-          </Link>
+          {/* Show different actions based on authentication */}
+          {isAuthenticated ? (
+            <>
+              <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                Dashboard
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  clearTokens()
+                  router.push('/')
+                }}
+              >
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/article-writer">
+                <Button variant="outline" className="hover:border-primary">
+                  Try Demo
+                </Button>
+              </Link>
+              <Link href="/auth">
+                <Button className="gradient-btn text-white">
+                  Sign In
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -117,16 +144,44 @@ export function Header() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t">
-                <Link href="/article-writer" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    Try Demo
-                  </Button>
-                </Link>
-                <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full gradient-btn text-white">
-                    Sign In
-                  </Button>
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setMobileMenuOpen(false)
+                        router.push('/dashboard')
+                      }}
+                    >
+                      Dashboard
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        clearTokens()
+                        setMobileMenuOpen(false)
+                        router.push('/')
+                      }}
+                    >
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/article-writer" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        Try Demo
+                      </Button>
+                    </Link>
+                    <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full gradient-btn text-white">
+                        Sign In
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </motion.div>

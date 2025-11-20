@@ -243,7 +243,8 @@ export function ArticlePreview({ result, onSave }: ArticlePreviewProps) {
                            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                            prose-img:rounded-lg prose-img:shadow-md
                            prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded"
-                dangerouslySetInnerHTML={{ __html: result?.html || "" }}
+                // Use html or markdown fallback safely
+                dangerouslySetInnerHTML={{ __html: result?.html || result?.markdown || "" }}
               />
             </CardContent>
           </Card>
@@ -260,7 +261,7 @@ export function ArticlePreview({ result, onSave }: ArticlePreviewProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {result?.keywords && result.keywords.length > 0 ? (
+                {Array.isArray(result?.keywords) && result.keywords.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {result.keywords.map((keyword: string, i: number) => (
                       <Badge key={i} variant="secondary">{keyword}</Badge>
@@ -280,12 +281,12 @@ export function ArticlePreview({ result, onSave }: ArticlePreviewProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {result?.internal_links && result.internal_links.length > 0 ? (
+                {Array.isArray(result?.internal_links) && result.internal_links.length > 0 ? (
                   <ul className="space-y-2">
                     {result.internal_links.slice(0, 5).map((link: any, i: number) => (
                       <li key={i} className="text-sm">
                         <a href={link.url} className="text-primary hover:underline">
-                          {link.anchor_text || link.url}
+                          {link.anchor_text || link.title || link.url}
                         </a>
                       </li>
                     ))}
@@ -342,7 +343,7 @@ export function ArticlePreview({ result, onSave }: ArticlePreviewProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {result?.social_posts && result.social_posts.length > 0 ? (
+              {Array.isArray(result?.social_posts) && result.social_posts.length > 0 ? (
                 result.social_posts.map((post: any, i: number) => (
                   <div key={i} className="p-4 rounded-lg bg-muted/50 border space-y-2">
                     <div className="flex items-center justify-between">
@@ -382,7 +383,7 @@ export function ArticlePreview({ result, onSave }: ArticlePreviewProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {result?.citations && result.citations.length > 0 ? (
+              {Array.isArray(result?.citations) && result.citations.length > 0 ? (
                 <ol className="space-y-3 list-decimal list-inside">
                   {result.citations.map((citation: any, i: number) => (
                     <li key={i} className="text-sm">
@@ -417,7 +418,7 @@ export function ArticlePreview({ result, onSave }: ArticlePreviewProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {result?.faqs && result.faqs.length > 0 ? (
+              {Array.isArray(result?.faqs) && result.faqs.length > 0 ? (
                 result.faqs.map((faq: any, i: number) => (
                   <div key={i} className="p-4 rounded-lg bg-muted/50 border">
                     <h4 className="font-semibold mb-2">{faq.question}</h4>
@@ -457,7 +458,7 @@ export function ArticlePreview({ result, onSave }: ArticlePreviewProps) {
                   </div>
                 </div>
               )}
-              {result?.meta_keywords && result.meta_keywords.length > 0 && (
+              {Array.isArray(result?.meta_keywords) && result.meta_keywords.length > 0 && (
                 <div>
                   <label className="text-sm font-semibold">Meta Keywords</label>
                   <div className="mt-1 p-3 rounded-lg bg-muted/50 border">

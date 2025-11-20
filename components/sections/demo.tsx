@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -35,6 +36,10 @@ export default function Demo() {
   const [topic, setTopic] = useState("")
   const [language, setLanguage] = useState("en")
   const [tone, setTone] = useState("professional")
+  // Optional brief/instructions to guide the AI.  Users can add additional
+  // context or promotional copy here.  This will be sent to the backend
+  // when generating the draft.
+  const [brief, setBrief] = useState("")
   // Word count selection.  Options are determined by plan: demo/guest users can
   // choose only 1500 words; free plan users up to 2000; pro users up to 3000.
   const [wordCount, setWordCount] = useState("3000")
@@ -77,6 +82,8 @@ export default function Demo() {
 
     // Build the base payload for generation
     const requestedWordCount = parseInt(wordCount) || 2500
+    // Include optional brief when provided.  Unknown fields will be
+    // ignored by the backend but allow users to customise content.
     const basePayload = {
       topic: topic.trim(),
       tone: tone,
@@ -85,7 +92,8 @@ export default function Demo() {
       research: true,
       generate_social: true,
       generate_image: true,
-      generate_faqs: true
+      generate_faqs: true,
+      ...(brief.trim() ? { brief: brief.trim() } : {})
     }
 
     // Helper to handle successful generation: updates quota, saves article
@@ -244,6 +252,15 @@ export default function Demo() {
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Optional brief/instructions */}
+              <Textarea
+                placeholder="Brief / extra instructions (optional)"
+                value={brief}
+                onChange={e => setBrief(e.target.value)}
+                disabled={loading}
+                className="sm:col-span-2 min-h-[80px] resize-none"
+              />
 
               <Button
                 onClick={run}
